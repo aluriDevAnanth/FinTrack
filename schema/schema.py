@@ -36,19 +36,14 @@ class BaseTransactionModel(BaseModel):
 
 # User models
 class UserCreate(BaseUserModel):
-    password: str = Field(..., max_length=255)
+    password: str = Field()
 
 
 class UserUpdate(BaseUserModel):
-    password: Optional[str] = Field(default=None, min_length=8)
-
-
-class UserResponse(BaseUserModel):
     user_id: int
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
+    username: Optional[str] = Field(default=None)
+    email: Optional[str] = Field(default=None)
+    password: Optional[str] = Field(default=None)
 
 
 # Category models
@@ -152,6 +147,17 @@ class SavingsGoalCreate(BaseModel):
         return v
 
 
+class BaseSuccessResponse(BaseModel):
+    success: bool
+    message: str
+
+
+class BaseErrorResponse(BaseModel):
+    success: bool
+    error: str
+    errorType: str
+
+
 class SavingsGoalResponse(SavingsGoalCreate):
     goal_id: int
     created_at: datetime
@@ -161,8 +167,6 @@ class SavingsGoalResponse(SavingsGoalCreate):
 
 
 # DB Schema
-
-
 class User(BaseModel):
     user_id: int
     username: str
