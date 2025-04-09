@@ -67,7 +67,11 @@ def create_users(
             inserted_users = [User(**iud) for iud in inserted_user_data]
             cursor.close()
             return BaseUsersSuccessResponse(
-                **{"success": True, "message": "", "results": inserted_users}
+                **{
+                    "success": True,
+                    "message": "Users created successfully",
+                    "results": inserted_users,
+                }
             )
     except MYSQLError as e:
         return BaseErrorResponse(
@@ -245,7 +249,6 @@ def delete_users(
 
         if conn:
             cursor = conn.cursor()
-            results: list[User] = []
 
             sql_str = f"""-- sql
                 delete from users where username in ({", ".join(["%s"] * len(delete_user_ids))})            
@@ -278,10 +281,3 @@ def delete_users(
         return BaseErrorResponse(
             success=False, errorType=type(e).__name__, error=str(e)
         )
-
-
-pprint(
-    create_users(
-        [CreateUser(username="qqq", email="qqq@qqq.com", password="qqq")]
-    ).results
-)

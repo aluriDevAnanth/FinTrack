@@ -2,16 +2,20 @@ import mysql.connector
 from mysql.connector import Error
 import os
 
+env = os.getenv("DATABASE")
+
+
 host, user, password, database = (
     os.getenv("HOST"),
     os.getenv("USER"),
     os.getenv("PASSWORD"),
-    os.getenv("DATABASE"),
+    "testing_fin_track" if os.getenv("env") == "testing" else os.getenv("DATABASE"),
 )
 
 
 def create_connection():
     try:
+        print(123, host, user, password, database)
         connection = mysql.connector.connect(
             host=host,
             user=user,
