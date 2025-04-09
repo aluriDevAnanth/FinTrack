@@ -15,7 +15,6 @@ host, user, password, database = (
 
 def create_connection():
     try:
-        print(123, host, user, password, database)
         connection = mysql.connector.connect(
             host=host,
             user=user,

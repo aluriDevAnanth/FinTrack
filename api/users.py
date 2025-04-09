@@ -122,7 +122,6 @@ def read_users(
                 )
 
             if len(read_usernames) > len(read_users_data):
-                print(len(read_usernames), len(read_users_data))
                 return BaseErrorResponse(
                     **{
                         "success": False,
@@ -150,77 +149,67 @@ def read_users(
         )
 
 
-def update_users(
-    update_users_data: list[UpdateUser],
+def update_user(
+    update_users_data: UpdateUser,
 ) -> BaseUsersSuccessResponse | BaseErrorResponse:
-    columns = [
-        "user_id",
-        "username",
-        "email",
-        "password_hash",
-        "created_at",
-        "updated_at",
-    ]
     try:
-        if not update_users_data:
+        if not update_users_data or not update_users_data.model_fields_set:
             return BaseErrorResponse(
                 success=False,
                 errorType="ValidationError",
                 error="No update data provided",
             )
 
-        if conn:
-            cursor = conn.cursor()
-            results: list[User] = []
-
-            for uud in update_users_data:
-                update_user = uud.model_dump()
-                update_user.pop("user_id", None)
-
-                if "password" in update_user and update_user["password"]:
-                    update_user["password_hash"] = sha256(
-                        update_user["password"].encode()
-                    ).hexdigest()
-                    update_user.pop("password", None)
-                else:
-                    update_user["password_hash"] = None
-
-                placeholders = [
-                    f"{k} = %s" for k, v in update_user.items() if v is not None
-                ]
-
-                values = [v for k, v in update_user.items() if v is not None]
-                values.append(uud.user_id)
-
-                sql_str = f"""-- sql
-                        update users set {", ".join(placeholders)} where user_id = %s                
-                    """
-                cursor.execute(sql_str, tuple(values))
-                conn.commit()
-
-                cursor.execute(
-                    """-- sql
-                    select user_id, username, email, password_hash, created_at, updated_at from users 
-                    where user_id = %s
-                    """,
-                    (uud.user_id,),
-                )
-                update_user_data = dict(zip(columns, cursor.fetchone()))
-                results.append(User(**update_user_data))
-
-            cursor.close()
-
-            return BaseUsersSuccessResponse(
-                success=True,
-                message="Users updated successfully",
-                results=results,
-            )
-        else:
+        if not conn:
             return BaseErrorResponse(
                 success=False,
                 errorType="MYSQLError",
-                error="Failder to connect to DB",
+                error="Failed to connect to DB",
             )
+
+        cursor = conn.cursor()
+
+        fields_to_update = update_users_data.model_fields_set - {"user_id"}
+        if not fields_to_update:
+            return BaseErrorResponse(
+                success=False,
+                errorType="ValidationError",
+                error="No updatable fields provided",
+            )
+
+        set_clause = ", ".join([f"{field} = %s" for field in fields_to_update])
+        values = tuple(getattr(update_users_data, field) for field in fields_to_update)
+
+        update_query = f"UPDATE users SET {set_clause} WHERE user_id = %s"
+        print(update_query, values + (update_users_data.user_id,))
+
+        cursor.execute(update_query, values + (update_users_data.user_id,))
+        conn.commit()
+
+        cursor.execute(
+            "SELECT * FROM users WHERE user_id = %s", (update_users_data.user_id,)
+        )
+        row = cursor.fetchone()
+
+        if row is None:
+            return BaseErrorResponse(
+                success=False,
+                errorType="NotFoundError",
+                error="User not found after update",
+            )
+
+        columns = [desc[0] for desc in cursor.description]
+        user_data = dict(zip(columns, row))
+        user = User(**user_data)
+
+        cursor.close()
+
+        return BaseUsersSuccessResponse(
+            success=True,
+            message="User updated successfully",
+            results=[user],
+        )
+
     except MYSQLError as e:
         return BaseErrorResponse(
             success=False, errorType=type(e).__name__, error=str(e)
@@ -230,17 +219,16 @@ def update_users(
             success=False, errorType=type(e).__name__, error=e.json()
         )
     except Exception as e:
-        print(e)
         return BaseErrorResponse(
             success=False, errorType=type(e).__name__, error=str(e)
         )
 
 
-def delete_users(
-    delete_user_ids: list[str],
+def delete_user(
+    delete_user_id: int,
 ) -> BaseUsersSuccessResponse | BaseErrorResponse:
     try:
-        if not delete_user_ids:
+        if not delete_user_id:
             return BaseErrorResponse(
                 success=False,
                 errorType="ValidationError",
@@ -251,9 +239,9 @@ def delete_users(
             cursor = conn.cursor()
 
             sql_str = f"""-- sql
-                delete from users where username in ({", ".join(["%s"] * len(delete_user_ids))})            
+                delete from users where user_id  = %s            
             """
-            cursor.execute(sql_str, tuple(delete_user_ids))
+            cursor.execute(sql_str, (delete_user_id,))
             conn.commit()
             cursor.close()
 
@@ -277,7 +265,6 @@ def delete_users(
             success=False, errorType=type(e).__name__, error=e.json()
         )
     except Exception as e:
-        print(e)
         return BaseErrorResponse(
             success=False, errorType=type(e).__name__, error=str(e)
         )

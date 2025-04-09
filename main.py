@@ -2,11 +2,14 @@ import os
 import json
 import questionary
 from pprint import pprint
-from api.users import create_users
+from api.users import create_users, update_user, delete_user
 from api.auth import login, LoginResult, auth
-from schema.schema import CreateUser, User
+from schema.schema import CreateUser, User, UpdateUser
 from pydantic import BaseModel
 from typing import Optional
+from colorama import init, Fore, Style, Back
+
+init(autoreset=True)
 
 
 class CurrentUserData(BaseModel):
@@ -24,16 +27,16 @@ class UserSession(BaseModel):
 
 class FinTrack:
     def __init__(self):
-        self.user_session = UserSession()
+        self.user_session: UserSession = UserSession()
         self.current_user: User = None
         self.save_file = "./cmd/save_data.json"
         self.clear_screen()
-        self.sync_save_data()
+        self.sync_user_session()
 
     def clear_screen(self):
         os.system("cls" if os.name == "nt" else "clear")
 
-    def sync_save_data(self):
+    def sync_user_session(self):
         try:
             with open(self.save_file, "r") as f:
                 data = json.load(f)
@@ -48,11 +51,11 @@ class FinTrack:
                     else:
                         print("Authentication failed. Please log in again.")
                         self.user_session = UserSession()
-                        self.save_save_data()
+                        self.save_user_session()
         except Exception as e:
             print(f"Error loading save data: {e}")
 
-    def save_save_data(self):
+    def save_user_session(self):
         try:
             with open(self.save_file, "w") as f:
                 json.dump(self.user_session.model_dump(), f, indent=4)
@@ -88,8 +91,8 @@ class FinTrack:
     def logout(self):
         self.user_session = UserSession()
         self.current_user = None
-        self.save_save_data()
-        print("Successfully logged out.")
+        self.save_user_session()
+        print(Fore.RED + Style.BRIGHT + "Successfully logged out.")
 
     def user_menu(self):
         while True:
@@ -116,14 +119,96 @@ class FinTrack:
                     self.create_account_flow()
 
                 if action == "Update Account Details":
-                    self.create_account_flow()
+                    self.update_user_cli()
 
-                print(action)
+                if action == "Delete Account":
+                    self.delete_user_cli()
+
             except Exception as e:
                 print(f"User menu error: {e}")
 
-    def update_user(self):
-        print("Update user details coming soon!")
+    def update_user_cli(self):
+        self.view_or_login_user()
+        try:
+            update_user_data: UpdateUser = UpdateUser(user_id=self.current_user.user_id)
+            print(f"{1111} \n")
+            pprint(update_user_data)
+
+            print("Update your account details")
+            print(
+                Fore.YELLOW + "If you don not want to change, then just press Enter: "
+            )
+
+            username = questionary.text(
+                "Enter New Username: (leave empty to skip)"
+            ).ask()
+            if username and username is not "":
+                update_user_data.username = username
+
+            email = questionary.text("Enter New Email: (leave empty to skip)").ask()
+            if email and email is not "":
+                update_user_data.email = email
+
+            while True:
+                password = questionary.password(
+                    "Enter New Password: (leave empty to skip)"
+                ).ask()
+                if not password or password == "":
+                    break
+
+                cpassword = questionary.password(
+                    "Enter New Confirm Password: (leave empty to skip)"
+                ).ask()
+
+                if password == cpassword:
+                    update_user_data.password = password
+                    break
+                else:
+                    print("Passwords do not match. Please try again.")
+
+            res = update_user(update_user_data)
+
+            if res.success:
+                self.current_user = res.results[0]
+                self.user_session.current_user_data.email = self.current_user.email
+                self.user_session.current_user_data.username = (
+                    self.current_user.username
+                )
+                self.save_user_session()
+                print("Account updated successfully.")
+        except Exception as e:
+            print(f"Error while Updating User: {e}")
+
+    def delete_user_cli(self):
+        self.view_or_login_user()
+        try:
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + "Warning: This action will delete your account!"
+            )
+            do_you_want_to_delete_your_account = questionary.text(
+                "Do you really want to delete your account? (press 'delete' to confirm)"
+            ).ask()
+            if do_you_want_to_delete_your_account is None:
+                return
+            if do_you_want_to_delete_your_account == "delete":
+                res = delete_user(self.current_user.user_id)
+                if res.success:
+                    print(
+                        Fore.RED
+                        + Style.BRIGHT
+                        + f"{self.current_user.username.capitalize()} account deleted successfully."
+                    )
+                    self.logout()
+            else:
+                print(
+                    Fore.RED
+                    + Style.BRIGHT
+                    + "Account deletion cancelled. No changes made."
+                )
+        except Exception as e:
+            print(f"Error while Deleting User: {e}")
 
     def login_user(self):
         print("Login to your account")
@@ -138,7 +223,20 @@ class FinTrack:
         res = login(username_or_email, password)
         if res.success:
             pprint(res.results)
-            self.set_user_session(res.results)
+            self.current_user = res.results.user
+            self.user_session = UserSession(
+                **{
+                    "cookie": res.results.jwt,
+                    "has_logged_in": True,
+                    "previous_username": res.results.user.username,
+                    "current_user_data": {
+                        "user_id": res.results.user.user_id,
+                        "username": res.results.user.username,
+                        "email": res.results.user.email,
+                    },
+                }
+            )
+            self.save_user_session()
             print(f"Logged in as {username_or_email}.")
         else:
             print(f"Login failed: {res.errorType} - {res.error}")
@@ -149,7 +247,7 @@ class FinTrack:
             return
 
         try:
-            print("You need to log in to view your account.")
+            print(Fore.RED, "You need to log in to use your account.")
             has_account = questionary.confirm("Do you have an account?").ask()
             if has_account is None:
                 return
@@ -190,22 +288,6 @@ class FinTrack:
 
         except Exception as e:
             print(f"Account creation error: {e}")
-
-    def set_user_session(self, login_result: LoginResult):
-        self.current_user = login_result.user
-        self.user_session = UserSession(
-            **{
-                "cookie": login_result.jwt,
-                "has_logged_in": True,
-                "previous_username": login_result.user.username,
-                "current_user_data": {
-                    "user_id": login_result.user.user_id,
-                    "username": login_result.user.username,
-                    "email": login_result.user.email,
-                },
-            }
-        )
-        self.save_save_data()
 
     def income_menu(self):
         print("Income menu coming soon!")

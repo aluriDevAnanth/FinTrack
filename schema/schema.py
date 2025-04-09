@@ -64,7 +64,7 @@ if True:
     class UpdateUser(BaseUserModel):
         user_id: int
         username: Optional[str] = Field(default=None)
-        email: Optional[str] = Field(default=None)
+        email: Optional[EmailStr] = Field(default=None)
         password: Optional[str] = Field(default=None)
 
 

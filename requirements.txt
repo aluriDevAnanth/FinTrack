@@ -5,3 +5,4 @@ pytest
 Faker
 questionary
 pyjwt
+colorama
