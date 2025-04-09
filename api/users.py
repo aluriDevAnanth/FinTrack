@@ -105,8 +105,8 @@ def read_users(
             placeholder = ",".join(["%s"] * len(read_usernames))
             cursor.execute(
                 f"""-- sql
-                select user_id, username, email, password_hash, created_at, updated_at from users 
-                where username in ({placeholder})
+                    select user_id, username, email, password_hash, created_at, updated_at from users 
+                    where username in ({placeholder})
                 """,
                 tuple(read_usernames),
             )

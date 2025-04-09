@@ -1,0 +1,10 @@
+{
+  "cookie": "",
+  "has_logged_in": false,
+  "previous_username": "",
+  "current_user_data": {
+    "user_id": 0,
+    "username": "",
+    "email": ""
+  }
+}

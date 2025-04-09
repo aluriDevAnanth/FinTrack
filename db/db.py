@@ -9,7 +9,7 @@ host, user, password, database = (
     os.getenv("HOST"),
     os.getenv("USER"),
     os.getenv("PASSWORD"),
-    "testing_fin_track" if os.getenv("env") == "testing" else os.getenv("DATABASE"),
+    "testing_fin_track" if os.getenv("ENV") == "testing" else os.getenv("DATABASE"),
 )
 
 

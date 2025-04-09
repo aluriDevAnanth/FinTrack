@@ -3,3 +3,5 @@ pydantic
 pydantic[email]
 pytest 
 Faker
+questionary
+pyjwt
