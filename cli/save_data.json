@@ -1,0 +1,10 @@
+{
+    "cookie": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6InFxcSIsImVtYWlsIjoicXFxQHFxcS5jb20iLCJleHAiOjE3NDQ1NzA2Njl9.Iw6L51TdrrU1KJmh9x4JcWwz4RZnAx6YP5bdrFEA_zw",
+    "has_logged_in": true,
+    "previous_username": "qqq",
+    "current_user_data": {
+        "user_id": 1,
+        "username": "qqq",
+        "email": "qqq@qqq.com"
+    }
+}
