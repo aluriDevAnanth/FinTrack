@@ -63,7 +63,7 @@ def create_expense(
             return BaseExpenseSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Expense created successfully",
+                    "message": "Expense created successfully: " + repr(expense),
                     "result": expense,
                 }
             )
@@ -156,7 +156,6 @@ def update_expense(
             expense = Expense(**dict(zip(cursor.column_names, cursor.fetchone())))
 
             cursor.close()
-            conn.close()
             return BaseExpenseSuccessResponse(
                 **{
                     "success": True,
@@ -210,3 +209,29 @@ def delete_expense(expense_id: int) -> BaseSuccessResponse | BaseErrorResponse:
         return BaseErrorResponse(
             **{"success": False, "errorType": type(e).__name__, "error": str(e)}
         )
+
+
+""" 
+pprint(
+    create_expense(
+        CreateExpense(
+            user_id=1, amount=100.0, description="Food", expense_date=date.today()
+        )
+    )
+)
+
+pprint([i.model_dump() for i in read_expense_list(1).result])
+
+pprint(
+    update_expense(
+        UpdateExpense(
+            expense_id=7,
+            amount=200.0,
+            description="Updated Food",
+            expense_date="2020-02-20",
+        )
+    )
+)
+
+pprint(delete_expense(6))
+"""

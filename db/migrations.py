@@ -1,7 +1,5 @@
 from db import create_connection, database
 
-print(database)
-
 
 def execute_migration(conn, sql):
     try:

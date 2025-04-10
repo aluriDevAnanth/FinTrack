@@ -22,7 +22,6 @@ def create_connection():
             database=database,
         )
         if connection.is_connected():
-            print("Connected to MySQL database")
             return connection
     except Error as e:
         print(f"Error: {e}")

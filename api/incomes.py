@@ -1,3 +1,4 @@
+import json
 from db.db import create_connection
 from schema.schema import (
     CreateIncome,
@@ -64,7 +65,7 @@ def create_income(
             return BaseIncomeSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Income created successfully",
+                    "message": "Income created successfully: " + repr(income),
                     "result": income,
                 }
             )
@@ -125,7 +126,9 @@ def update_income(
         if conn:
             cursor = conn.cursor()
 
-            str_placeholder = ",".join(
+            pprint(update_income_data.model_dump(exclude_unset=True))
+
+            str_placeholder = ", ".join(
                 [
                     f"{i} = %s"
                     for i in list(update_income_data.model_dump(exclude_unset=True))
@@ -137,6 +140,7 @@ def update_income(
                     for i in list(update_income_data.model_dump(exclude_unset=True))
                 ]
             )
+            print(str_placeholder, values)
             cursor.execute(
                 f"""-- sql
                     update income set {str_placeholder} where income_id = %s
@@ -157,11 +161,10 @@ def update_income(
             income = Income(**dict(zip(cursor.column_names, cursor.fetchone())))
 
             cursor.close()
-            conn.close()
             return BaseIncomeSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Users created successfully",
+                    "message": "Income created Updated successfully",
                     "result": income,
                 }
             )
@@ -195,7 +198,7 @@ def delete_income(income_id: int) -> BaseSuccessResponse | BaseErrorResponse:
             return BaseSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Users created successfully",
+                    "message": "Income deleted successfully.",
                     "result": None,
                 }
             )
@@ -211,3 +214,14 @@ def delete_income(income_id: int) -> BaseSuccessResponse | BaseErrorResponse:
         return BaseErrorResponse(
             **{"success": False, "errorType": type(e).__name__, "error": str(e)}
         )
+
+
+""" 
+pprint(
+    update_income(
+        UpdateIncome(
+            income_id=28, amount=11, description="qqq11",  
+        )
+    )
+)
+"""

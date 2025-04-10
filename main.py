@@ -1,13 +1,14 @@
 import os
-from cmd.user_session_manager import UserSessionManager
-from cmd.user_cli import UserCLI
-from colorama import init
+from pprint import pprint
+from cli.user_session_manager import UserSessionManager
+from cli.user_cli import UserCLI
+from colorama import Fore, Style, init
 import questionary
-from cmd.income_cli import IncomeCLI
-from cmd.expenses_cli import ExpensesCLI
-from cmd.transactions_cli import TransactionsCLI
-from cmd.budgets_cli import BudgetsCLI
-from cmd.savings_goals_cli import SavingsGoalsCLI
+from cli.income_cli import IncomeCLI
+from cli.expenses_cli import ExpensesCLI
+from cli.transactions_cli import TransactionsCLI
+from cli.budgets_cli import BudgetsCLI
+from cli.savings_goals_cli import SavingsGoalsCLI
 
 init(autoreset=True)
 
@@ -53,13 +54,13 @@ class FinTrack:
             elif choice == "income":
                 self.income_cli.income_menu()
             elif choice == "expenses":
-                self.expense_cli.expense_menu()
+                self.expense_cli.expenses_menu()
             elif choice == "transactions":
-                self.transaction_cli.transaction_menu()
+                self.transaction_cli.transactions_menu()
             elif choice == "budgets":
-                self.budget_cli.budget_menu()
+                self.budget_cli.budgets_menu()
             elif choice == "savings goals":
-                self.savings_goal_cli.savings_goal_menu()
+                self.savings_goal_cli.savings_goals_menu()
 
 
 if __name__ == "__main__":

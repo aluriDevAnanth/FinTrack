@@ -67,7 +67,7 @@ def create_transaction(
             return BaseTransactionSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Transaction created successfully",
+                    "message": "Transaction created successfully :" + repr(transaction),
                     "result": transaction,
                 }
             )
@@ -85,16 +85,16 @@ def create_transaction(
         )
 
 
-def read_transaction_list(transaction_id: int):
+def read_transaction_list(user_id: int):
     try:
         if conn:
             cursor = conn.cursor()
             cursor.execute(
                 f"""-- sql
                 SELECT {", ".join(list(Transaction.model_fields.keys()))} FROM transactions 
-                WHERE transaction_id = %s
+                WHERE user_id = %s
                 """,
-                (transaction_id,),
+                (user_id,),
             )
             transaction_list = [
                 Transaction(**dict(zip(cursor.column_names, i)))
@@ -147,10 +147,23 @@ def update_transaction(
             )
             cursor.execute(
                 f"""-- sql
-                    UPDATE transactions SET {str_placeholder} WHERE transaction_id = %s
+                    UPDATE transactions SET {str_placeholder} WHERE transaction_id = %s and user_id = %s
                 """,
-                values + (update_transaction_data.transaction_id,),
+                values
+                + (
+                    update_transaction_data.transaction_id,
+                    update_transaction_data.user_id,
+                ),
             )
+
+            if not cursor.rowcount:
+                return BaseErrorResponse(
+                    **{
+                        "success": False,
+                        "errorType": "TransactionNotUpdated",
+                        "error": "Transaction is Not Updated because Transaction not found or user_id does not match.",
+                    }
+                )
 
             conn.commit()
 
@@ -170,7 +183,7 @@ def update_transaction(
             return BaseTransactionSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Transaction updated successfully",
+                    "message": "Transaction updated successfully: " + repr(transaction),
                     "result": transaction,
                 }
             )
@@ -189,16 +202,28 @@ def update_transaction(
         )
 
 
-def delete_transaction(transaction_id: int) -> BaseSuccessResponse | BaseErrorResponse:
+def delete_transaction(
+    transaction_id: int, user_id: int
+) -> BaseSuccessResponse | BaseErrorResponse:
     try:
         if conn:
             cursor = conn.cursor()
             cursor.execute(
                 f"""-- sql
-                    DELETE FROM transactions WHERE transaction_id = %s
+                    DELETE FROM transactions WHERE transaction_id = %s and user_id = %s
                 """,
-                (transaction_id,),
+                (transaction_id, user_id),
             )
+
+            if not cursor.rowcount:
+                return BaseErrorResponse(
+                    **{
+                        "success": False,
+                        "errorType": "TransactionNotUpdated",
+                        "error": "Transaction is Not Deleted because Transaction not found or user_id does not match.",
+                    }
+                )
+
             conn.commit()
             cursor.close()
             return BaseSuccessResponse(
