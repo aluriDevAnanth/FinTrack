@@ -161,26 +161,40 @@ class UpdateTransaction(BaseModel):
 
 
 # Budget models
-class BudgetCreate(BaseModel):
+
+
+# Budget models
+class BaseBudgetModel(BaseModel):
+    budget_id: Optional[int]
+    user_id: Optional[int]
+    amount: Optional[Decimal]
+    start_date: Optional[date]
+    end_date: Optional[date]
+    created_at: Optional[datetime]
+
+
+class Budget(BaseBudgetModel):
+    budget_id: int
     user_id: int
-    amount: Decimal = Field(..., gt=0, decimal_places=2)
+    amount: Decimal
+    start_date: date
+    end_date: date
+    created_at: datetime
+
+
+class CreateBudget(BaseModel):
+    user_id: int
+    amount: Decimal
     start_date: date
     end_date: date
 
-    @field_validator("end_date")
-    @classmethod
-    def validate_dates(cls, v: date, info) -> date:
-        start_date = info.data.get("start_date")
-        if start_date and v <= start_date:
-            raise ValueError("End date must be after start date")
-        return v
 
-
-class BudgetResponse(BudgetCreate):
+class UpdateBudget(BaseModel):
     budget_id: int
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
+    user_id: Optional[int] = None
+    amount: Optional[Decimal] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 
 class SavingsGoalCreate(BaseModel):
