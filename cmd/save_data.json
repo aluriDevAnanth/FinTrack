@@ -1,10 +1,10 @@
 {
-    "cookie": "",
-    "has_logged_in": false,
-    "previous_username": "",
+    "cookie": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6InFxcSIsImVtYWlsIjoicXFxQHFxcS5jb20iLCJleHAiOjE3NDQ1MTkxODB9.VKbxxOw_qSgz1o09sWGlrTqalNcykhRuXlnJbI8b214",
+    "has_logged_in": true,
+    "previous_username": "qqq",
     "current_user_data": {
-        "user_id": 0,
-        "username": "",
-        "email": ""
+        "user_id": 1,
+        "username": "qqq",
+        "email": "qqq@qqq.com"
     }
 }
