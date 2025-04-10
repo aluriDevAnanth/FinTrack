@@ -1,47 +1,48 @@
 from db.db import create_connection
 from schema.schema import (
-    CreateIncome,
-    UpdateIncome,
-    Income,
     BaseSuccessResponse,
     BaseErrorResponse,
+    Transaction,
+    CreateTransaction,
+    UpdateTransaction,
 )
 from pydantic import ValidationError
-from pprint import pprint
 from mysql.connector import Error as MYSQLError
-from hashlib import sha256
+from datetime import date
+from pprint import pprint
 
 conn = create_connection()
 
 
-class BaseIncomeSuccessResponse(BaseSuccessResponse):
-    result: Income
+class BaseTransactionSuccessResponse(BaseSuccessResponse):
+    result: Transaction
 
 
-class BaseIncomeReadSuccessResponse(BaseSuccessResponse):
-    result: list[Income]
+class BaseTransactionReadSuccessResponse(BaseSuccessResponse):
+    result: list[Transaction]
 
 
-def create_income(
-    income_create_data: CreateIncome,
-) -> BaseIncomeSuccessResponse | BaseErrorResponse:
-
+def create_transaction(
+    transaction_create_data: CreateTransaction,
+) -> BaseTransactionSuccessResponse | BaseErrorResponse:
     try:
         if conn:
             str_placeholder = ",".join(
-                ["%s"] * len(list(income_create_data.model_fields_set))
+                ["%s"] * len(list(transaction_create_data.model_fields_set))
             )
-            col_name_placeholder = ", ".join(list(income_create_data.model_fields_set))
+            col_name_placeholder = ", ".join(
+                list(transaction_create_data.model_fields_set)
+            )
             values = tuple(
                 [
-                    getattr(income_create_data, i)
-                    for i in list(income_create_data.model_fields_set)
+                    getattr(transaction_create_data, i)
+                    for i in list(transaction_create_data.model_fields_set)
                 ]
             )
             cursor = conn.cursor()
             cursor.execute(
                 f"""-- sql
-                insert into income ({col_name_placeholder}) values ({str_placeholder})
+                INSERT INTO transactions ({col_name_placeholder}) VALUES ({str_placeholder})
                 """,
                 values,
             )
@@ -52,20 +53,22 @@ def create_income(
 
             cursor.execute(
                 f"""-- sql
-                select {", ".join(list(Income.model_fields.keys()))} from income 
-                where income_id = %s
+                SELECT {", ".join(list(Transaction.model_fields.keys()))} FROM transactions 
+                WHERE transaction_id = %s
                 """,
                 (last_insert_id,),
             )
 
-            income = Income(**dict(zip(cursor.column_names, cursor.fetchone())))
+            transaction = Transaction(
+                **dict(zip(cursor.column_names, cursor.fetchone()))
+            )
 
             cursor.close()
-            return BaseIncomeSuccessResponse(
+            return BaseTransactionSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Users created successfully",
-                    "result": income,
+                    "message": "Transaction created successfully",
+                    "result": transaction,
                 }
             )
     except MYSQLError as e:
@@ -82,26 +85,27 @@ def create_income(
         )
 
 
-def read_income_list(user_id: int):
+def read_transaction_list(transaction_id: int):
     try:
         if conn:
             cursor = conn.cursor()
             cursor.execute(
                 f"""-- sql
-                select {", ".join(list(Income.model_fields.keys()))} from income 
-                where user_id = %s
+                SELECT {", ".join(list(Transaction.model_fields.keys()))} FROM transactions 
+                WHERE transaction_id = %s
                 """,
-                (user_id,),
+                (transaction_id,),
             )
-            income_list = [
-                Income(**dict(zip(cursor.column_names, i))) for i in cursor.fetchall()
+            transaction_list = [
+                Transaction(**dict(zip(cursor.column_names, i)))
+                for i in cursor.fetchall()
             ]
             cursor.close()
-            return BaseIncomeReadSuccessResponse(
+            return BaseTransactionReadSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Users created successfully",
-                    "result": income_list,
+                    "message": "Transactions retrieved successfully",
+                    "result": transaction_list,
                 }
             )
     except MYSQLError as e:
@@ -118,9 +122,9 @@ def read_income_list(user_id: int):
         )
 
 
-def update_income(
-    update_income_data: UpdateIncome,
-) -> BaseIncomeSuccessResponse | BaseErrorResponse:
+def update_transaction(
+    update_transaction_data: UpdateTransaction,
+) -> BaseTransactionSuccessResponse | BaseErrorResponse:
     try:
         if conn:
             cursor = conn.cursor()
@@ -128,41 +132,46 @@ def update_income(
             str_placeholder = ",".join(
                 [
                     f"{i} = %s"
-                    for i in list(update_income_data.model_dump(exclude_unset=True))
+                    for i in list(
+                        update_transaction_data.model_dump(exclude_unset=True)
+                    )
                 ]
             )
             values = tuple(
                 [
-                    getattr(update_income_data, i)
-                    for i in list(update_income_data.model_dump(exclude_unset=True))
+                    getattr(update_transaction_data, i)
+                    for i in list(
+                        update_transaction_data.model_dump(exclude_unset=True)
+                    )
                 ]
             )
             cursor.execute(
                 f"""-- sql
-                    update income set {str_placeholder} where income_id = %s
+                    UPDATE transactions SET {str_placeholder} WHERE transaction_id = %s
                 """,
-                values + (update_income_data.income_id,),
+                values + (update_transaction_data.transaction_id,),
             )
 
             conn.commit()
 
             cursor.execute(
                 f"""-- sql
-                    select {", ".join(list(Income.model_fields.keys()))} from income 
-                    where income_id = %s
+                    SELECT {", ".join(list(Transaction.model_fields.keys()))} FROM transactions 
+                    WHERE transaction_id = %s
                 """,
-                (update_income_data.income_id,),
+                (update_transaction_data.transaction_id,),
             )
 
-            income = Income(**dict(zip(cursor.column_names, cursor.fetchone())))
+            transaction = Transaction(
+                **dict(zip(cursor.column_names, cursor.fetchone()))
+            )
 
             cursor.close()
-            conn.close()
-            return BaseIncomeSuccessResponse(
+            return BaseTransactionSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Users created successfully",
-                    "result": income,
+                    "message": "Transaction updated successfully",
+                    "result": transaction,
                 }
             )
 
@@ -180,22 +189,22 @@ def update_income(
         )
 
 
-def delete_income(income_id: int) -> BaseSuccessResponse | BaseErrorResponse:
+def delete_transaction(transaction_id: int) -> BaseSuccessResponse | BaseErrorResponse:
     try:
         if conn:
             cursor = conn.cursor()
             cursor.execute(
                 f"""-- sql
-                    delete from income where income_id = %s
+                    DELETE FROM transactions WHERE transaction_id = %s
                 """,
-                (income_id,),
+                (transaction_id,),
             )
             conn.commit()
             cursor.close()
             return BaseSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Users created successfully",
+                    "message": "Transaction deleted successfully",
                     "result": None,
                 }
             )
