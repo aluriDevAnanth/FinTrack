@@ -197,25 +197,41 @@ class UpdateBudget(BaseModel):
     end_date: Optional[date] = None
 
 
-class SavingsGoalCreate(BaseModel):
-    user_id: int
-    name: str = Field(..., min_length=1, max_length=100)
-    target_amount: Decimal = Field(..., gt=0, decimal_places=2)
-    current_amount: Decimal = Field(..., ge=0, decimal_places=2)
-    target_date: Optional[date] = None
-
-    @field_validator("current_amount")
-    @classmethod
-    def validate_current_amount(cls, v: Decimal, info) -> Decimal:
-        target_amount = info.data.get("target_amount")
-        if target_amount and v > target_amount:
-            raise ValueError("Current amount cannot exceed target amount")
-        return v
+# Savings Goal models
+class BaseSavingsGoalModel(BaseModel):
+    goal_id: Optional[int]
+    user_id: Optional[int]
+    name: Optional[str]
+    target_amount: Optional[Decimal]
+    current_amount: Optional[Decimal]
+    target_date: Optional[date]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 
-class SavingsGoalResponse(SavingsGoalCreate):
+class SavingsGoal(BaseSavingsGoalModel):
     goal_id: int
+    user_id: int
+    name: str
+    target_amount: Decimal
+    current_amount: Decimal
+    target_date: Optional[date]
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+
+class CreateSavingsGoal(BaseModel):
+    user_id: int
+    name: str
+    target_amount: Decimal
+    current_amount: Optional[Decimal] = 0.00
+    target_date: Optional[date] = None
+
+
+class UpdateSavingsGoal(BaseModel):
+    goal_id: int
+    user_id: Optional[int] = None
+    name: Optional[str] = None
+    target_amount: Optional[Decimal] = None
+    current_amount: Optional[Decimal] = None
+    target_date: Optional[date] = None

@@ -259,6 +259,8 @@ def delete_budget(budget_id: int) -> BaseSuccessResponse | BaseErrorResponse:
         )
 
 
+# tests
+
 """ pprint(
     create_budget(
         CreateBudget(
