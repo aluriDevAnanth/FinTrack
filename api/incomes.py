@@ -64,7 +64,7 @@ def create_income(
             return BaseIncomeSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Users created successfully",
+                    "message": "Income created successfully",
                     "result": income,
                 }
             )

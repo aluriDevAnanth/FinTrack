@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 from decimal import Decimal
-from pydantic import BaseModel, field_validator, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field
 from enum import Enum
 
 
@@ -158,9 +158,6 @@ class UpdateTransaction(BaseModel):
     description: Optional[str] = None
     transaction_date: Optional[date] = None
     type: Optional[TransactionType] = None
-
-
-# Budget models
 
 
 # Budget models

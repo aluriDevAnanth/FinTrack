@@ -19,7 +19,7 @@ class UserCLI:
                 choices=[
                     "Create Account",
                     "View Account",
-                    "Update Account Details",
+                    "Update Account",
                     "Delete Account",
                 ],
             ).ask(kbi_msg="Exited user menu.")
@@ -30,7 +30,7 @@ class UserCLI:
 
     def view_account_cli(self):
         if self.session.user_session.has_logged_in:
-            pprint(self.session.current_user)
+            pprint(self.session.current_user.model_dump())
         else:
             self.view_or_login_user()
 
@@ -55,7 +55,7 @@ class UserCLI:
         else:
             print(f"Creation failed: {results.errorType} - {results.error}")
 
-    def update_account_details_cli(self):
+    def update_account_cli(self):
         self.view_or_login_user()
         user = self.session.current_user
         data = UpdateUser(user_id=user.user_id)
@@ -81,7 +81,6 @@ class UserCLI:
         res = update_user(data)
         if res.success:
             self.session.current_user = res.results[0]
-            pprint(self.session.current_user)
             self.session.user_session.current_user_data.username = res.results[
                 0
             ].username
@@ -126,7 +125,7 @@ class UserCLI:
 
     def view_or_login_user(self):
         if self.session.user_session.has_logged_in:
-            pprint(self.session.current_user)
+            pprint(self.session.current_user.model_dump())
         else:
             print(Fore.RED + "Please log in.")
             if questionary.confirm("Do you have an account?").ask():
