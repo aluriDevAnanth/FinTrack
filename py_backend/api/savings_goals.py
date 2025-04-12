@@ -2,7 +2,7 @@
 
 from datetime import date
 from pprint import pprint
-from db.db import create_connection
+from py_backend.db.db import create_connection
 from schema.schema import (
     BaseSuccessResponse,
     BaseErrorResponse,

@@ -1,5 +1,10 @@
 from colorama import init, Fore, Style
-from api.incomes import create_income, read_income_list, update_income, delete_income
+from py_backend.api.incomes import (
+    create_income,
+    read_income_list,
+    update_income,
+    delete_income,
+)
 from cli.user_session_manager import UserSessionManager
 from schema.schema import CreateIncome, UpdateIncome
 import questionary

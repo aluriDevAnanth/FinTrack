@@ -1,48 +1,46 @@
-import json
-from db.db import create_connection
+from py_backend.db.db import create_connection
 from schema.schema import (
-    CreateIncome,
-    UpdateIncome,
-    Income,
+    CreateExpense,
+    UpdateExpense,
+    Expense,
     BaseSuccessResponse,
     BaseErrorResponse,
 )
 from pydantic import ValidationError
 from mysql.connector import Error as MYSQLError
 from pprint import pprint
-from hashlib import sha256
+from datetime import date
 
 conn = create_connection()
 
 
-class BaseIncomeSuccessResponse(BaseSuccessResponse):
-    result: Income
+class BaseExpenseSuccessResponse(BaseSuccessResponse):
+    result: Expense
 
 
-class BaseIncomeReadSuccessResponse(BaseSuccessResponse):
-    result: list[Income]
+class BaseExpenseReadSuccessResponse(BaseSuccessResponse):
+    result: list[Expense]
 
 
-def create_income(
-    income_create_data: CreateIncome,
-) -> BaseIncomeSuccessResponse | BaseErrorResponse:
-
+def create_expense(
+    expense_create_data: CreateExpense,
+) -> BaseExpenseSuccessResponse | BaseErrorResponse:
     try:
         if conn:
             str_placeholder = ",".join(
-                ["%s"] * len(list(income_create_data.model_fields_set))
+                ["%s"] * len(list(expense_create_data.model_fields_set))
             )
-            col_name_placeholder = ", ".join(list(income_create_data.model_fields_set))
+            col_name_placeholder = ", ".join(list(expense_create_data.model_fields_set))
             values = tuple(
                 [
-                    getattr(income_create_data, i)
-                    for i in list(income_create_data.model_fields_set)
+                    getattr(expense_create_data, i)
+                    for i in list(expense_create_data.model_fields_set)
                 ]
             )
             cursor = conn.cursor()
             cursor.execute(
                 f"""-- sql
-                insert into income ({col_name_placeholder}) values ({str_placeholder})
+                insert into expenses ({col_name_placeholder}) values ({str_placeholder})
                 """,
                 values,
             )
@@ -53,20 +51,20 @@ def create_income(
 
             cursor.execute(
                 f"""-- sql
-                select {", ".join(list(Income.model_fields.keys()))} from income 
-                where income_id = %s
+                select {", ".join(list(Expense.model_fields.keys()))} from expenses 
+                where expense_id = %s
                 """,
                 (last_insert_id,),
             )
 
-            income = Income(**dict(zip(cursor.column_names, cursor.fetchone())))
+            expense = Expense(**dict(zip(cursor.column_names, cursor.fetchone())))
 
             cursor.close()
-            return BaseIncomeSuccessResponse(
+            return BaseExpenseSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Income created successfully: " + repr(income),
-                    "result": income,
+                    "message": "Expense created successfully: " + repr(expense),
+                    "result": expense,
                 }
             )
     except MYSQLError as e:
@@ -83,26 +81,26 @@ def create_income(
         )
 
 
-def read_income_list(user_id: int):
+def read_expense_list(user_id: int):
     try:
         if conn:
             cursor = conn.cursor()
             cursor.execute(
                 f"""-- sql
-                select {", ".join(list(Income.model_fields.keys()))} from income 
+                select {", ".join(list(Expense.model_fields.keys()))} from expenses 
                 where user_id = %s
                 """,
                 (user_id,),
             )
-            income_list = [
-                Income(**dict(zip(cursor.column_names, i))) for i in cursor.fetchall()
+            expense_list = [
+                Expense(**dict(zip(cursor.column_names, i))) for i in cursor.fetchall()
             ]
             cursor.close()
-            return BaseIncomeReadSuccessResponse(
+            return BaseExpenseReadSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Users created successfully",
-                    "result": income_list,
+                    "message": "Expenses retrieved successfully",
+                    "result": expense_list,
                 }
             )
     except MYSQLError as e:
@@ -119,53 +117,50 @@ def read_income_list(user_id: int):
         )
 
 
-def update_income(
-    update_income_data: UpdateIncome,
-) -> BaseIncomeSuccessResponse | BaseErrorResponse:
+def update_expense(
+    update_expense_data: UpdateExpense,
+) -> BaseExpenseSuccessResponse | BaseErrorResponse:
     try:
         if conn:
             cursor = conn.cursor()
 
-            pprint(update_income_data.model_dump(exclude_unset=True))
-
-            str_placeholder = ", ".join(
+            str_placeholder = ",".join(
                 [
                     f"{i} = %s"
-                    for i in list(update_income_data.model_dump(exclude_unset=True))
+                    for i in list(update_expense_data.model_dump(exclude_unset=True))
                 ]
             )
             values = tuple(
                 [
-                    getattr(update_income_data, i)
-                    for i in list(update_income_data.model_dump(exclude_unset=True))
+                    getattr(update_expense_data, i)
+                    for i in list(update_expense_data.model_dump(exclude_unset=True))
                 ]
             )
-            print(str_placeholder, values)
             cursor.execute(
                 f"""-- sql
-                    update income set {str_placeholder} where income_id = %s
+                    update expenses set {str_placeholder} where expense_id = %s
                 """,
-                values + (update_income_data.income_id,),
+                values + (update_expense_data.expense_id,),
             )
 
             conn.commit()
 
             cursor.execute(
                 f"""-- sql
-                    select {", ".join(list(Income.model_fields.keys()))} from income 
-                    where income_id = %s
+                    select {", ".join(list(Expense.model_fields.keys()))} from expenses 
+                    where expense_id = %s
                 """,
-                (update_income_data.income_id,),
+                (update_expense_data.expense_id,),
             )
 
-            income = Income(**dict(zip(cursor.column_names, cursor.fetchone())))
+            expense = Expense(**dict(zip(cursor.column_names, cursor.fetchone())))
 
             cursor.close()
-            return BaseIncomeSuccessResponse(
+            return BaseExpenseSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Income created Updated successfully",
-                    "result": income,
+                    "message": "Expense updated successfully",
+                    "result": expense,
                 }
             )
 
@@ -183,22 +178,22 @@ def update_income(
         )
 
 
-def delete_income(income_id: int) -> BaseSuccessResponse | BaseErrorResponse:
+def delete_expense(expense_id: int) -> BaseSuccessResponse | BaseErrorResponse:
     try:
         if conn:
             cursor = conn.cursor()
             cursor.execute(
                 f"""-- sql
-                    delete from income where income_id = %s
+                    delete from expenses where expense_id = %s
                 """,
-                (income_id,),
+                (expense_id,),
             )
             conn.commit()
             cursor.close()
             return BaseSuccessResponse(
                 **{
                     "success": True,
-                    "message": "Income deleted successfully.",
+                    "message": "Expense deleted successfully",
                     "result": None,
                 }
             )
@@ -218,10 +213,25 @@ def delete_income(income_id: int) -> BaseSuccessResponse | BaseErrorResponse:
 
 """ 
 pprint(
-    update_income(
-        UpdateIncome(
-            income_id=28, amount=11, description="qqq11",  
+    create_expense(
+        CreateExpense(
+            user_id=1, amount=100.0, description="Food", expense_date=date.today()
         )
     )
 )
+
+pprint([i.model_dump() for i in read_expense_list(1).result])
+
+pprint(
+    update_expense(
+        UpdateExpense(
+            expense_id=7,
+            amount=200.0,
+            description="Updated Food",
+            expense_date="2020-02-20",
+        )
+    )
+)
+
+pprint(delete_expense(6))
 """

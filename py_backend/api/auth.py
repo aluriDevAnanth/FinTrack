@@ -1,4 +1,4 @@
-from db.db import create_connection
+from py_backend.db.db import create_connection
 from hashlib import sha256
 from schema.schema import User, BaseErrorResponse, BaseSuccessResponse
 from mysql.connector import Error as MYSQLError

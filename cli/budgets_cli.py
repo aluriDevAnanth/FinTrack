@@ -1,14 +1,23 @@
+from datetime import date, timedelta
 from pprint import pprint
 import questionary
 from colorama import init, Fore, Style
-from api.budgets import create_budget, read_budget_list, update_budget, delete_budget
+from py_backend.api.budgets import (
+    create_budget,
+    read_budget_list,
+    update_budget,
+    delete_budget,
+)
 from schema.schema import CreateBudget, UpdateBudget
+from decimal import Decimal
+from cli.user_session_manager import UserSessionManager
 
 init(autoreset=True)
 
 
 class BudgetsCLI:
-    def __init__(self, session_manager):
+
+    def __init__(self, session_manager: UserSessionManager):
         self.session = session_manager
 
     def budgets_menu(self):
@@ -37,13 +46,46 @@ class BudgetsCLI:
 
     def create_budget_cli(self):
         try:
-            category = questionary.text("Budget Category:").ask()
-            limit = float(questionary.text("Budget Limit:").ask())
+            amount = Decimal(questionary.text("Enter amount:").ask())
+
+            while True:
+                start_date = questionary.text("Enter start_date: (YYYY-MM-DD)").ask()
+                start_date = (
+                    date.today() if start_date == "" else date.fromisoformat(start_date)
+                )
+                end_date = questionary.text("Enter end_date: (YYYY-MM-DD)").ask()
+                end_date = (
+                    timedelta(30) + date.today()
+                    if end_date == ""
+                    else date.fromisoformat(end_date)
+                )
+
+                if start_date < date.today():
+                    print(
+                        Fore.RED
+                        + Style.BRIGHT
+                        + "Start date must be today or in the future."
+                    )
+                    continue
+
+                if end_date <= date.today():
+                    print(Fore.RED + Style.BRIGHT + "End date must be after today.")
+                    continue
+
+                if end_date <= start_date:
+                    print(
+                        Fore.RED + Style.BRIGHT + "End date must be after start date."
+                    )
+                    continue
+
+                break
+
             res = create_budget(
                 CreateBudget(
                     user_id=self.session.current_user.user_id,
-                    category=category,
-                    limit=limit,
+                    amount=amount,
+                    start_date=start_date,
+                    end_date=end_date,
                 )
             )
             print(
@@ -76,8 +118,48 @@ class BudgetsCLI:
     def update_budget_cli(self):
         try:
             budget_id = int(questionary.text("Enter budget ID to update:").ask())
-            limit = float(questionary.text("New limit:").ask())
-            res = update_budget(UpdateBudget(budget_id=budget_id, limit=limit))
+            update_budget_data = UpdateBudget(
+                budget_id=budget_id, user_id=self.session.current_user.user_id
+            )
+            amount = questionary.text("Enter amount:").ask()
+            if amount:
+                update_budget_data.amount = Decimal(amount)
+
+            while True:
+                start_date = questionary.text("Enter start_date: (YYYY-MM-DD)").ask()
+                start_date = (
+                    date.today() if start_date == "" else date.fromisoformat(start_date)
+                )
+                end_date = questionary.text("Enter end_date: (YYYY-MM-DD)").ask()
+                end_date = (
+                    timedelta(30) + date.today()
+                    if end_date == ""
+                    else date.fromisoformat(end_date)
+                )
+
+                if start_date < date.today():
+                    print(
+                        Fore.RED
+                        + Style.BRIGHT
+                        + "Start date must be today or in the future."
+                    )
+                    continue
+
+                if end_date <= date.today():
+                    print(Fore.RED + Style.BRIGHT + "End date must be after today.")
+                    continue
+
+                if end_date <= start_date:
+                    print(
+                        Fore.RED + Style.BRIGHT + "End date must be after start date."
+                    )
+                    continue
+
+                update_budget_data.start_date = start_date
+                update_budget_data.end_date = end_date
+                break
+
+            res = update_budget(update_budget_data)
             print(
                 res.message
                 if res.success

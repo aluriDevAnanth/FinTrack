@@ -2,7 +2,7 @@ from decimal import Decimal
 from pprint import pprint
 import questionary
 from colorama import init, Fore, Style
-from api.transactions import (
+from py_backend.api.transactions import (
     read_transaction_list,
     create_transaction,
     update_transaction,
@@ -10,6 +10,7 @@ from api.transactions import (
 )
 from schema.schema import CreateTransaction, UpdateTransaction, TransactionType
 from cli.user_session_manager import UserSessionManager
+from datetime import date
 
 init(autoreset=True)
 
@@ -51,6 +52,9 @@ class TransactionsCLI:
             amount = float(questionary.text("Enter transaction amount: ").ask())
             description = questionary.text("Enter Description: ").ask()
             transaction_date = questionary.text("Enter Date (YYYY-MM-DD): ").ask()
+            transaction_date = (
+                date.today() if transaction_date == "" else transaction_date
+            )
             typee = questionary.select(
                 "Choose Type: ", choices=["income", "expense"]
             ).ask()

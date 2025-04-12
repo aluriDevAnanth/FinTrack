@@ -1,12 +1,11 @@
 from json import dump as json_dump, load as json_load
 from colorama import Fore, Style
 from schema.schema import User, CreateUser
-from api.auth import auth
+from py_backend.api.auth import auth, login
+from py_backend.api.users import create_users
 from pydantic import BaseModel
 from typing import Optional
 from pprint import pprint
-from api.users import create_users
-from api.auth import login
 import questionary
 
 

@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, UTC
 from typing import Optional
 from decimal import Decimal
 from pydantic import BaseModel, EmailStr, Field
@@ -222,7 +222,7 @@ class CreateSavingsGoal(BaseModel):
     name: str
     target_amount: Decimal
     current_amount: Optional[Decimal] = 0.00
-    target_date: Optional[date] = None
+    target_date: date
 
 
 class UpdateSavingsGoal(BaseModel):

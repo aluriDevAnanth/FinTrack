@@ -1,7 +1,7 @@
 import questionary
 from colorama import Fore, Style
 from pprint import pprint
-from api.users import update_user, delete_user
+from py_backend.api.users import update_user, delete_user
 from schema.schema import UpdateUser
 from cli.user_session_manager import UserSessionManager
 

@@ -1,5 +1,5 @@
 from colorama import init, Fore, Style
-from api.expenses import (
+from py_backend.api.expenses import (
     create_expense,
     read_expense_list,
     update_expense,
@@ -8,6 +8,7 @@ from api.expenses import (
 from schema.schema import CreateExpense, UpdateExpense
 import questionary
 from pprint import pprint
+from datetime import date
 from cli.user_session_manager import UserSessionManager
 
 init(autoreset=True)
@@ -44,17 +45,31 @@ class ExpensesCLI:
         try:
             amount = float(questionary.text("Enter expense amount: ").ask())
             description = questionary.text("Description: ").ask()
-            expense_date = questionary.text("Date (YYYY-MM-DD): ").ask()
-
-            res = create_expense(
-                CreateExpense(
-                    user_id=self.session.current_user.user_id,
-                    amount=amount,
-                    description=description,
-                    expense_date=expense_date,
-                )
+            expense_date_input = questionary.text(
+                "Date (YYYY-MM-DD) (Leave blank for today): "
+            ).ask()
+            expense_date = (
+                date.fromisoformat(expense_date_input)
+                if expense_date_input
+                else date.today()
             )
-            print(res.message if res.success else f"{res.errorType}: {res.error}")
+
+            expense_create_data = CreateExpense(
+                user_id=self.session.current_user.user_id,
+                amount=amount,
+                description=description,
+                expense_date=expense_date,
+            )
+
+            if expense_date:
+                expense_create_data.expense_date = expense_date
+
+            res = create_expense(expense_create_data)
+            print(
+                res.message
+                if res.success
+                else f"[Exception from API in add_expense_cli] {res.errorType}: {res.error}"
+            )
         except Exception as e:
             print(
                 Fore.RED
@@ -68,7 +83,7 @@ class ExpensesCLI:
             pprint(
                 [i.model_dump() for i in res.result]
                 if res.success
-                else f"{res.errorType}: {res.error}"
+                else f"[Exception from API in view_expenses_cli] {res.errorType}: {res.error}"
             )
         except Exception as e:
             print(
@@ -107,7 +122,11 @@ class ExpensesCLI:
 
             res = update_expense(update_expense_data)
 
-            print(res.message if res.success else f"{res.errorType}: {res.error}")
+            print(
+                res.message
+                if res.success
+                else f"[Exception from API in update_expense_cli] {res.errorType}: {res.error}"
+            )
             pprint(res.result.model_dump() if res.success else None)
 
         except Exception as e:
@@ -121,7 +140,11 @@ class ExpensesCLI:
         try:
             expense_id = int(questionary.text("Enter expense ID to delete:").ask())
             res = delete_expense(expense_id)
-            print(res.message if res.success else f"{res.errorType}: {res.error}")
+            print(
+                res.message
+                if res.success
+                else f"[Exception from API in delete_expense_cli] {res.errorType}: {res.error}"
+            )
         except Exception as e:
             print(
                 Fore.RED
