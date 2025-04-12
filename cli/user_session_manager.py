@@ -1,5 +1,4 @@
-import json
-
+from json import dump as json_dump, load as json_load
 from colorama import Fore, Style
 from schema.schema import User, CreateUser
 from api.auth import auth
@@ -33,7 +32,7 @@ class UserSessionManager:
     def sync_user_session(self):
         try:
             with open(self.save_file, "r") as f:
-                data = json.load(f)
+                data = json_load(f)
                 self.user_session = UserSession(**data)
 
                 if not self.user_session.has_logged_in:
@@ -50,44 +49,68 @@ class UserSessionManager:
                     )
                     self.reset_session()
         except Exception as e:
-            print(Fore.RED + Style.BRIGHT + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in sync_user_session] {type(e).__name__}: {str(e)}"
+            )
 
     def save_user_session(self):
         try:
             with open(self.save_file, "w") as f:
-                json.dump(self.user_session.model_dump(), f, indent=4)
+                json_dump(self.user_session.model_dump(), f, indent=4)
         except Exception as e:
-            print(Fore.RED + Style.BRIGHT + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in save_user_session] {type(e).__name__}: {str(e)}"
+            )
 
     def reset_session(self):
-        self.user_session = UserSession()
-        self.current_user = None
-        self.save_user_session()
+        try:
+            self.user_session = UserSession()
+            self.current_user = None
+            self.save_user_session()
+        except Exception as e:
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in reset_session] {type(e).__name__}: {str(e)}"
+            )
 
     def login_user(self):
-        username_or_email = questionary.text("Enter Username or Email: ").ask()
-        password = questionary.password("Enter Password: ").ask()
-        res = login(username_or_email, password)
+        try:
+            username_or_email = questionary.text("Enter Username or Email: ").ask()
+            password = questionary.password("Enter Password: ").ask()
+            res = login(username_or_email, password)
 
-        if res.success and res.results.user is not None:
-            user = res.results.user
-            self.current_user = user
-            self.user_session.cookie = res.results.jwt
-            self.user_session.has_logged_in = True
-            self.user_session.previous_username = user.username
-            self.user_session.current_user_data = CurrentUserData(
-                **{
-                    "user_id": user.user_id,
-                    "username": user.username,
-                    "email": user.email,
-                }
-            )
-            self.save_user_session()
+            if res.success and res.results.user is not None:
+                user = res.results.user
+                self.current_user = user
+                self.user_session.cookie = res.results.jwt
+                self.user_session.has_logged_in = True
+                self.user_session.previous_username = user.username
+                self.user_session.current_user_data = CurrentUserData(
+                    **{
+                        "user_id": user.user_id,
+                        "username": user.username,
+                        "email": user.email,
+                    }
+                )
+                self.save_user_session()
+                print(
+                    Fore.GREEN
+                    + Style.BRIGHT
+                    + f"Logged in as {self.current_user.username}"
+                )
+            else:
+                print(Fore.RED + Style.BRIGHT + f"{res.errorType}: {res.error}")
+        except Exception as e:
             print(
-                Fore.GREEN + Style.BRIGHT + f"Logged in as {self.current_user.username}"
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in login_user] {type(e).__name__}: {str(e)}"
             )
-        else:
-            print(Fore.RED + Style.BRIGHT + f"{res.errorType}: {res.error}")
 
     def create_account_cli(self):
         try:
@@ -133,7 +156,11 @@ class UserSessionManager:
                 )
                 self.create_account_cli()
         except Exception as e:
-            print(Fore.RED + Style.BRIGHT + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in create_account_cli] {type(e).__name__}: {str(e)}"
+            )
 
     def login_or_create_account(self):
         try:
@@ -147,5 +174,5 @@ class UserSessionManager:
                 self.login_user()
         except Exception as e:
             print(
-                f"Error during login or account creation - {type(e).__name__}: {str(e)}"
+                f"[Exception in login_or_create_account] {type(e).__name__}: {str(e)}"
             )

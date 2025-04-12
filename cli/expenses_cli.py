@@ -28,19 +28,21 @@ class ExpensesCLI:
                         "Update Expense",
                         "Delete Expense",
                     ],
-                ).ask(kbi_msg="Exited expenses menu.")
+                ).ask(kbi_msg="")
                 if not action:
                     break
 
                 getattr(self, action.lower().replace(" ", "_") + "_cli")()
             except Exception as e:
-                print(Fore.RED + f"{type(e).__name__}: {str(e)}")
+                print(
+                    Fore.RED
+                    + Style.BRIGHT
+                    + f"[Exception in expenses_menu] {type(e).__name__}: {str(e)}"
+                )
 
     def add_expense_cli(self):
         try:
-            amount_input = questionary.text("Enter expense amount: ").ask()
-            amount = float(amount_input)
-
+            amount = float(questionary.text("Enter expense amount: ").ask())
             description = questionary.text("Description: ").ask()
             expense_date = questionary.text("Date (YYYY-MM-DD): ").ask()
 
@@ -54,7 +56,11 @@ class ExpensesCLI:
             )
             print(res.message if res.success else f"{res.errorType}: {res.error}")
         except Exception as e:
-            print(Fore.RED + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in add_expense_cli] {type(e).__name__}: {str(e)}"
+            )
 
     def view_expenses_cli(self):
         try:
@@ -65,7 +71,11 @@ class ExpensesCLI:
                 else f"{res.errorType}: {res.error}"
             )
         except Exception as e:
-            print(Fore.RED + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in view_expenses_cli] {type(e).__name__}: {str(e)}"
+            )
 
     def update_expense_cli(self):
         try:
@@ -74,7 +84,7 @@ class ExpensesCLI:
                 print(
                     Fore.RED
                     + Style.BRIGHT
-                    + "Exited update expense as expense_id is mandatory field, so skipping this means no update will be done."
+                    + "Exited update expense as expense_id is mandatory field."
                 )
                 return
 
@@ -101,14 +111,20 @@ class ExpensesCLI:
             pprint(res.result.model_dump() if res.success else None)
 
         except Exception as e:
-            print(Fore.RED + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in update_expense_cli] {type(e).__name__}: {str(e)}"
+            )
 
     def delete_expense_cli(self):
         try:
-            expense_id_input = questionary.text("Enter expense ID to delete:").ask()
-            expense_id = int(expense_id_input)
-
+            expense_id = int(questionary.text("Enter expense ID to delete:").ask())
             res = delete_expense(expense_id)
             print(res.message if res.success else f"{res.errorType}: {res.error}")
         except Exception as e:
-            print(Fore.RED + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in delete_expense_cli] {type(e).__name__}: {str(e)}"
+            )

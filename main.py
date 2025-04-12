@@ -1,4 +1,4 @@
-import os
+from os import system as os_system, name as os_name
 from pprint import pprint
 from cli.user_session_manager import UserSessionManager
 from cli.user_cli import UserCLI
@@ -25,42 +25,48 @@ class FinTrack:
         self.savings_goal_cli = SavingsGoalsCLI(self.session_manager)
 
     def clear_screen(self):
-        os.system("cls" if os.name == "nt" else "clear")
+        os_system("cls" if os_name == "nt" else "clear")
 
     def main_menu(self):
-        while True:
-            choice = questionary.select(
-                "What do you want to do?",
-                choices=[
-                    "user",
-                    "income",
-                    "expenses",
-                    "transactions",
-                    "budgets",
-                    "savings goals",
-                    "logout",
-                ],
-            ).ask()
+        try:
+            while True:
+                choice = questionary.select(
+                    "What do you want to do?",
+                    choices=[
+                        "user",
+                        "income",
+                        "expenses",
+                        "transactions",
+                        "budgets",
+                        "savings goals",
+                        "logout",
+                    ],
+                ).ask(kbi_msg="")
 
-            if choice is None:
-                print("Exiting the application.")
-                break
+                if choice is None:
+                    break
 
-            if choice == "logout":
-                self.session_manager.reset_session()
-                print("Logged out.")
-            elif choice == "user":
-                self.user_cli.user_menu()
-            elif choice == "income":
-                self.income_cli.income_menu()
-            elif choice == "expenses":
-                self.expense_cli.expenses_menu()
-            elif choice == "transactions":
-                self.transaction_cli.transactions_menu()
-            elif choice == "budgets":
-                self.budget_cli.budgets_menu()
-            elif choice == "savings goals":
-                self.savings_goal_cli.savings_goals_menu()
+                if choice == "logout":
+                    self.session_manager.reset_session()
+                    print("Logged out.")
+                elif choice == "user":
+                    self.user_cli.user_menu()
+                elif choice == "income":
+                    self.income_cli.income_menu()
+                elif choice == "expenses":
+                    self.expense_cli.expenses_menu()
+                elif choice == "transactions":
+                    self.transaction_cli.transactions_menu()
+                elif choice == "budgets":
+                    self.budget_cli.budgets_menu()
+                elif choice == "savings goals":
+                    self.savings_goal_cli.savings_goals_menu()
+        except Exception as e:
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in main_menu] {type(e).__name__}: {str(e)}"
+            )
 
 
 if __name__ == "__main__":

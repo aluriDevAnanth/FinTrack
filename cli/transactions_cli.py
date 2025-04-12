@@ -40,7 +40,11 @@ class TransactionsCLI:
 
                 getattr(self, action.lower().replace(" ", "_") + "_cli")()
             except Exception as e:
-                print(Fore.RED + Style.BRIGHT + f"{type(e).__name__}: {str(e)}")
+                print(
+                    Fore.RED
+                    + Style.BRIGHT
+                    + f"[Exception in transactions_menu] {type(e).__name__}: {str(e)}"
+                )
 
     def add_transaction_cli(self):
         try:
@@ -66,7 +70,11 @@ class TransactionsCLI:
                 else Fore.RED + Style.BRIGHT + f"{res.errorType}: {res.error}"
             )
         except Exception as e:
-            print(Fore.RED + Style.BRIGHT + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in add_transaction_cli] {type(e).__name__}: {str(e)}"
+            )
 
     def view_transactions_cli(self):
         try:
@@ -77,7 +85,11 @@ class TransactionsCLI:
                 else Fore.RED + Style.BRIGHT + f"{res.errorType}: {res.error}"
             )
         except Exception as e:
-            print(Fore.RED + Style.BRIGHT + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in view_transactions_cli] {type(e).__name__}: {str(e)}"
+            )
 
     def update_transaction_cli(self):
         try:
@@ -134,7 +146,11 @@ class TransactionsCLI:
                 else Fore.RED + Style.BRIGHT + f"{res.errorType}: {res.error}"
             )
         except Exception as e:
-            print(Fore.RED + Style.BRIGHT + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in update_transaction_cli] {type(e).__name__}: {str(e)}"
+            )
 
     def delete_transaction_cli(self):
         try:
@@ -150,4 +166,8 @@ class TransactionsCLI:
                 else Fore.RED + Style.BRIGHT + f"{res.errorType}: {res.error}"
             )
         except Exception as e:
-            print(Fore.RED + Style.BRIGHT + f"{type(e).__name__}: {str(e)}")
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + f"[Exception in delete_transaction_cli] {type(e).__name__}: {str(e)}"
+            )
