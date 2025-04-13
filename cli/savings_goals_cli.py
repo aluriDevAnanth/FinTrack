@@ -113,6 +113,11 @@ class SavingsGoalsCLI:
             if target_date:
                 goal_data.target_date = date.fromisoformat(target_date)
 
+            if not questionary.confirm(
+                "Confirm to Update: " + repr(goal_data), default=False
+            ).ask():
+                return
+
             res = update_savings_goal(goal_data)
             print(
                 res.message

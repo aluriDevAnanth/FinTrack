@@ -6,3 +6,4 @@ Faker
 questionary
 pyjwt
 colorama
+tabulate

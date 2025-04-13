@@ -10,6 +10,7 @@ from schema.schema import CreateIncome, UpdateIncome
 import questionary
 from pprint import pprint
 from decimal import Decimal
+from tabulate import tabulate
 
 init(autoreset=True)
 
@@ -72,7 +73,14 @@ class IncomeCLI:
     def view_income_cli(self):
         try:
             res = read_income_list(self.session.current_user.user_id)
-            pprint([i.model_dump() for i in res.result] if res.success else res)
+            if res.success:
+                data = [i.model_dump() for i in res.result]
+                if data:
+                    print(tabulate(data, headers="keys", tablefmt="jira"))
+                else:
+                    print(Fore.YELLOW + Style.BRIGHT + "No income records found.")
+            else:
+                print(Fore.RED + Style.BRIGHT + f"{res.errorType}: {res.error}")
         except Exception as e:
             print(
                 Fore.RED
